@@ -4,16 +4,17 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.navigation.fragment.NavHostFragment
-import androidx.preference.EditTextPreference
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.PreferenceManager
+import androidx.preference.*
 
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.settings, rootKey)
+
+        val dataStore = DataStore()
+        // Enable the PreferenceDataStore for the entire hierarchy and disables SharedPreferences
+//        preferenceManager.preferenceDataStore = dataStore
 
         val accSettingsPref = findPreference<Preference>(getString(R.string.key_account_settings))
 
@@ -49,7 +50,43 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 true // true: accept the new value.
             }
         }
+//        Set a custom summary on other attributes apart from ListPreference and EdittextPreference
+        val notificationPref = findPreference<SwitchPreferenceCompat>(getString(R.string.key_new_msg_notif))
+        notificationPref?.summaryProvider = Preference.SummaryProvider<SwitchPreferenceCompat> { switchPref ->
+
+            if (switchPref?.isChecked!!)
+                "Status: ON"
+             else
+                "Status: OFF"
+        }
+
+        notificationPref?.preferenceDataStore = dataStore
+
+        // How to implement DataStore getBoolean method
+        val isNotifEnabled = dataStore.getBoolean("key_new_msg_notif", false)
     }
 
+    class DataStore: PreferenceDataStore() {
 
+        // Override methods only as per your need
+        // Do NOT override methods which you do not need to use
+        // After overriding, remove the super call. (could throw UnsupportedOperationException)
+
+        override fun getBoolean(key: String?, defValue: Boolean): Boolean {
+
+            if (key == "key_new_msg_notif") {
+                // Retrieve value from cloud or db
+                Log.i("DataStore", "getBoolean executed for $key")
+            }
+            return defValue
+        }
+
+        override fun putBoolean(key: String?, value: Boolean) {
+
+            if (key == "key_new_msg_notif") {
+                // Save value to cloud or local db
+                Log.i("DataStore", "putBoolean executed for $key with new value: $value")
+            }
+        }
+    }
 }
